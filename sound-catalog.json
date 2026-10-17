@@ -1,7 +1,8 @@
 {
   "schemaVersion": "1.0.0",
+  "catalogVersion": "1.1.0",
   "name": "Ferman Sound Catalog",
-  "status": "starter-candidates",
+  "status": "user-shortlisted-not-final-brand-approval",
   "baseUrl": "https://raw.githubusercontent.com/rezabahrami89/ferman-sound-catalog/main/",
   "credit": "Sound assets by Kenney",
   "packs": {
@@ -34,74 +35,46 @@
   },
   "sounds": [
     {
-      "id": "ui-click",
-      "pack": "interface",
-      "file": "click_001.ogg",
-      "events": ["button-click", "small-element-snap"],
-      "reviewStatus": "not-auditioned"
-    },
-    {
       "id": "ui-select",
       "pack": "interface",
       "file": "select_001.ogg",
       "events": ["selection", "highlight"],
-      "reviewStatus": "not-auditioned"
+      "reviewStatus": "user-shortlisted"
     },
     {
       "id": "panel-open",
       "pack": "interface",
       "file": "open_001.ogg",
       "events": ["panel-entry", "card-reveal"],
-      "reviewStatus": "not-auditioned"
-    },
-    {
-      "id": "panel-close",
-      "pack": "interface",
-      "file": "close_001.ogg",
-      "events": ["panel-exit", "card-dismiss"],
-      "reviewStatus": "not-auditioned"
+      "reviewStatus": "user-shortlisted"
     },
     {
       "id": "confirmation",
       "pack": "interface",
       "file": "confirmation_001.ogg",
       "events": ["success", "completion", "logo-reveal-candidate"],
-      "reviewStatus": "not-auditioned"
-    },
-    {
-      "id": "digital-glitch",
-      "pack": "interface",
-      "file": "glitch_001.ogg",
-      "events": ["glitch-transition"],
-      "reviewStatus": "not-auditioned"
-    },
-    {
-      "id": "light-impact",
-      "pack": "impact",
-      "file": "impactGeneric_light_000.ogg",
-      "events": ["object-landing", "type-lockup"],
-      "reviewStatus": "not-auditioned"
+      "reviewStatus": "user-shortlisted"
     },
     {
       "id": "metal-impact",
       "pack": "impact",
       "file": "impactMetal_medium_000.ogg",
       "events": ["metal-object-contact", "mechanical-lock"],
-      "reviewStatus": "not-auditioned"
+      "reviewStatus": "user-shortlisted"
     },
     {
       "id": "glass-impact",
       "pack": "impact",
       "file": "impactGlass_light_000.ogg",
       "events": ["glass-object-contact"],
-      "reviewStatus": "not-auditioned"
+      "reviewStatus": "user-shortlisted"
     },
     {
       "id": "energy-reveal",
       "pack": "scifi",
       "file": "forceField_000.ogg",
       "events": ["energy-reveal", "hologram-entry"],
-      "reviewStatus": "not-auditioned"
+      "reviewStatus": "user-shortlisted"
     }
   ],
   "selectionPolicy": {
