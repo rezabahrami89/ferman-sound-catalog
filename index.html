@@ -2,238 +2,371 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1">
-  <title>Ferman — Sound Preview</title>
+  <meta name="viewport" content="width=device-width,initial-scale=1">
+  <title>Ferman — Full Sound Library</title>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
   <style>
-    @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap');
-    :root { color-scheme: light; --bg:#f2f2f2; --ink:#000033; --accent:#df4f4f; }
-    * { box-sizing:border-box; }
-    body { margin:0; background:var(--bg); color:var(--ink); font-family:Inter,system-ui,sans-serif; }
-    main { max-width:1100px; margin:auto; padding:48px 24px; }
-    .eyebrow { font-size:12px; font-weight:700; letter-spacing:3px; color:var(--accent); }
-    h1 { font-size:clamp(32px,5vw,56px); letter-spacing:-2px; margin:14px 0; }
-    .intro { max-width:680px; line-height:1.7; opacity:.75; }
-    .toolbar { display:flex; align-items:center; flex-wrap:wrap; gap:12px; margin:28px 0; }
-    button,select { font:inherit; border:1px solid #d8d8e0; border-radius:10px; padding:12px 16px; }
-    button { cursor:pointer; background:white; color:var(--ink); font-weight:600; }
-    button:hover { border-color:var(--accent); }
-    button:focus-visible,select:focus-visible,input:focus-visible { outline:3px solid var(--accent); outline-offset:3px; }
-    button:disabled { cursor:wait; opacity:.5; }
-    select { background:white; color:var(--ink); }
-    #status { margin-bottom:20px; font-size:14px; line-height:1.6; }
-    .grid { display:grid; grid-template-columns:repeat(auto-fit,minmax(270px,1fr)); gap:16px; }
-    .card { background:white; border:1px solid #e3e3e9; border-radius:18px; padding:24px; }
-    .card.playing { border-color:var(--accent); box-shadow:0 0 0 1px var(--accent); }
-    .pack { font-size:11px; text-transform:uppercase; letter-spacing:2px; opacity:.6; }
-    h2 { margin:12px 0; font-size:20px; }
-    .filename { font-size:12px; overflow-wrap:anywhere; opacity:.65; }
-    .events { min-height:44px; font-size:13px; line-height:1.6; margin:16px 0; }
-    .play { background:var(--ink); color:white; border-color:var(--ink); width:100%; }
-    .pick { display:flex; align-items:center; gap:8px; font-size:13px; margin-top:18px; }
-    input { accent-color:var(--accent); }
-    .note { min-height:22px; margin-top:14px; font-size:12px; line-height:1.5; opacity:.7; }
-    footer { margin-top:32px; font-size:12px; line-height:1.8; opacity:.7; }
+    :root{--paper:#f2f2f2;--navy:#000033;--coral:#df4f4f}
+    *{box-sizing:border-box}
+    body{margin:0;background:var(--paper);color:var(--navy);font-family:Inter,Arial,sans-serif}
+    main{max-width:1180px;margin:auto;padding:40px 22px}
+    .eyebrow{font-size:12px;font-weight:800;letter-spacing:3px;color:var(--coral)}
+    h1{font-size:clamp(32px,5vw,56px);letter-spacing:-2px;margin:16px 0}
+    p{line-height:1.7}
+    .intro{max-width:780px;opacity:.75}
+    .toolbar{display:flex;gap:10px;flex-wrap:wrap;align-items:center;margin:24px 0}
+    button,input,select{font:inherit}
+    button,select,input[type=search]{border:1px solid #ceced9;border-radius:10px;padding:11px 14px;background:white;color:var(--navy)}
+    button{font-weight:600;cursor:pointer}
+    button:hover{border-color:var(--coral)}
+    button:disabled{opacity:.5;cursor:not-allowed}
+    button:focus-visible,input:focus-visible,select:focus-visible{outline:3px solid var(--coral);outline-offset:3px}
+    input[type=search]{flex:1;min-width:200px}
+    input[type=range]{width:100px;accent-color:var(--navy)}
+    input[type=checkbox]{accent-color:var(--coral)}
+    label{font-size:13px}
+    .grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(270px,1fr));gap:14px}
+    article{background:white;border:1px solid #dedee6;border-radius:16px;padding:20px}
+    article.playing{border-color:var(--coral);box-shadow:0 0 0 1px var(--coral)}
+    .pack{font-size:11px;text-transform:uppercase;letter-spacing:2px;opacity:.6}
+    h2{font-size:17px;overflow-wrap:anywhere;margin:12px 0}
+    .tags{font-size:12px;line-height:1.6;opacity:.7;min-height:36px}
+    .play{width:100%;background:var(--navy);color:white;margin:12px 0}
+    .favorite{display:flex;align-items:center;gap:8px}
+    .note{font-size:12px;line-height:1.5;margin-top:12px;min-height:18px;opacity:.7}
+    #status{font-size:14px;margin-bottom:20px}
+    .small{font-size:12px;opacity:.7;line-height:1.7}
+    .primary{background:var(--navy);color:white}
   </style>
 </head>
 <body>
   <main>
-    <div class="eyebrow">FERMAN / SOUND LAB</div>
-    <h1>Listen. Compare. Shortlist.</h1>
-    <p class="intro">Audition the starter sound candidates. These mappings are provisional:
-      choose sounds by listening, not by filename alone. Nothing plays automatically.</p>
+    <div class="eyebrow">FERMAN / SOUND LIBRARY</div>
+    <h1>The collection. Not a shortlist.</h1>
+    <p class="intro">Browse every supported audio file in the three uploaded packs.
+      Favorites are optional preferences, not a limit on what Ferman can use.
+      Search tags are inferred from filenames—not listening-based judgments.</p>
     <div class="toolbar">
-      <label for="pack">Pack</label>
-      <select id="pack">
+      <input id="search" type="search" placeholder="Search filenames or tags…" aria-label="Search sounds">
+      <select id="pack" aria-label="Filter by pack">
         <option value="all">All packs</option>
         <option value="interface">Interface</option>
         <option value="impact">Impact</option>
         <option value="scifi">Sci-Fi</option>
       </select>
-      <button id="stop" type="button">Stop sound</button>
-      <button id="export" type="button" disabled>Export shortlist</button>
+      <label><input id="favoritesOnly" type="checkbox"> Favorites only</label>
     </div>
-    <div id="status" role="status" aria-live="polite">Loading catalog…</div>
-    <section id="grid" class="grid" aria-label="Sound candidates"></section>
-    <footer>
-      Assets by Kenney · CC0 · Selection is stored only in this browser when storage is available.<br>
-      Playback uses each file’s original level. This is not a loudness-normalized comparison
-      or a synchronized production player. Start with a low device volume.
-    </footer>
+    <div class="toolbar">
+      <button id="stop" type="button">Stop sound</button>
+      <label>Preview volume
+        <input id="volume" type="range" min="0" max="1" step=".01" value=".5">
+      </label>
+      <button id="exportAll" class="primary" type="button" disabled>Export full catalog</button>
+      <button id="exportFavorites" type="button" disabled>Export favorites</button>
+      <button id="reload" type="button">Reload library</button>
+    </div>
+    <div id="status" role="status" aria-live="polite">Discovering repository audio files…</div>
+    <section id="grid" class="grid" aria-label="Sound library"></section>
+    <p class="small">
+      Sound assets by Kenney · All three pack licenses were previously verified as CC0.
+      No audio plays automatically. Files load only when you click Play.<br>
+      Original sound levels vary; preview volume does not normalize loudness.
+      OGG playback depends on browser support. Favorites and audition history stay in this browser
+      when storage is available. No GitHub files are modified by this page.
+    </p>
   </main>
   <script>
-    (() => {
-      'use strict';
-      const root = 'https://raw.githubusercontent.com/rezabahrami89/ferman-sound-catalog/main/';
-      const status = document.getElementById('status');
-      const grid = document.getElementById('grid');
-      const filter = document.getElementById('pack');
-      const exportButton = document.getElementById('export');
-      const storageKey = 'ferman-sound-shortlist-v1';
-      let catalog = null;
-      let active = null;
-      let selected = new Set();
+  (() => {
+    "use strict";
+    const $ = id => document.getElementById(id);
+    const api = "https://api.github.com/repos/rezabahrami89/ferman-sound-catalog/git/trees/main?recursive=1";
+    const repository = "https://github.com/rezabahrami89/ferman-sound-catalog";
+    const packs = {
+      interface: {
+        directory:"kenney_interface-sounds/Audio/",
+        license:"CC0-1.0",
+        licensePath:"kenney_interface-sounds/License.txt"
+      },
+      impact: {
+        directory:"kenney_impact-sounds/Audio/",
+        license:"CC0-1.0",
+        licensePath:"kenney_impact-sounds/License.txt"
+      },
+      scifi: {
+        directory:"kenney_sci-fi-sounds/Audio/",
+        license:"CC0-1.0",
+        licensePath:"kenney_sci-fi-sounds/License.txt"
+      }
+    };
+    const favoriteKey = "ferman-sound-shortlist-v1";
+    const auditionKey = "ferman-library-auditions-v1";
+    let sounds = [], revision = "", active = null, loading = false;
+    let favorites = readSet(favoriteKey), auditioned = readSet(auditionKey);
+
+    function readSet(key) {
       try {
-        const saved = JSON.parse(localStorage.getItem(storageKey) || '[]');
-        if (Array.isArray(saved)) selected = new Set(saved.filter(x => typeof x === 'string'));
-      } catch (_) {}
+        const value = JSON.parse(localStorage.getItem(key) || "[]");
+        return new Set(Array.isArray(value) ? value.filter(x => typeof x === "string") : []);
+      } catch (_) { return new Set(); }
+    }
 
-      function saveSelection() {
-        try { localStorage.setItem(storageKey, JSON.stringify([...selected])); }
-        catch (_) { status.textContent = 'Shortlist updated for this session. Browser storage is unavailable.'; }
+    function saveSet(key, value) {
+      try { localStorage.setItem(key, JSON.stringify([...value])); }
+      catch (_) {
+        $("status").textContent = "Preferences updated for this session; browser storage is unavailable.";
       }
+    }
 
-      function stopSound() {
-        if (!active) return;
-        const current = active;
-        active = null;
-        current.audio.pause();
-        current.audio.removeAttribute('src');
-        current.audio.load();
-        current.card.classList.remove('playing');
-        current.button.textContent = 'Play sound';
-        current.button.disabled = false;
-        current.note.textContent = 'Stopped.';
+    function make(tag, className, text) {
+      const node = document.createElement(tag);
+      if (className) node.className = className;
+      if (text !== undefined) node.textContent = text;
+      return node;
+    }
+
+    function stopSound() {
+      if (!active) return;
+      const session = active;
+      active = null;
+      clearTimeout(session.timer);
+      session.audio.pause();
+      session.audio.removeAttribute("src");
+      session.audio.load();
+      session.card.classList.remove("playing");
+      session.button.textContent = "Play sound";
+      session.note.textContent = "Stopped.";
+    }
+
+    function inferTags(file) {
+      return [...new Set(file.replace(/\.[^.]+$/, "")
+        .replace(/([a-z])([A-Z])/g, "$1 $2")
+        .replace(/[_-]/g, " ")
+        .toLowerCase().split(/\s+/)
+        .filter(token => token && !/^\d+$/.test(token)))];
+    }
+
+    function isFavorite(sound) {
+      // Preserve earlier shortlist IDs as preferences for their exact files.
+      const legacy = {
+        "interface/select_001.ogg":"ui-select",
+        "interface/open_001.ogg":"panel-open",
+        "interface/confirmation_001.ogg":"confirmation",
+        "impact/impactMetal_medium_000.ogg":"metal-impact",
+        "impact/impactGlass_light_000.ogg":"glass-impact",
+        "scifi/forceField_000.ogg":"energy-reveal"
+      };
+      return favorites.has(sound.id) || favorites.has(legacy[sound.id]);
+    }
+
+    function migrateFavorites() {
+      for (const sound of sounds) {
+        if (isFavorite(sound)) favorites.add(sound.id);
       }
+      favorites = new Set(sounds.filter(s => favorites.has(s.id)).map(s => s.id));
+      saveSet(favoriteKey, favorites);
+    }
 
-      function element(tag, className, text) {
-        const node = document.createElement(tag);
-        if (className) node.className = className;
-        if (text !== undefined) node.textContent = text;
-        return node;
+    function render() {
+      stopSound();
+      $("grid").replaceChildren();
+      const query = $("search").value.trim().toLowerCase();
+      const visible = sounds.filter(sound =>
+        ($("pack").value === "all" || sound.pack === $("pack").value) &&
+        (!$("favoritesOnly").checked || favorites.has(sound.id)) &&
+        (!query || (sound.file + " " + sound.tags.join(" ")).toLowerCase().includes(query))
+      );
+      for (const sound of visible) {
+        const card = make("article");
+        const button = make("button", "play", "Play sound");
+        button.type = "button";
+        button.setAttribute("aria-label", "Play " + sound.file);
+        const note = make("div", "note",
+          auditioned.has(sound.id) ? "Played before in this browser." : "Not played in this browser.");
+        note.setAttribute("aria-live", "polite");
+        const label = make("label", "favorite");
+        const check = document.createElement("input");
+        check.type = "checkbox";
+        check.checked = favorites.has(sound.id);
+        check.addEventListener("change", () => {
+          if (check.checked) favorites.add(sound.id);
+          else favorites.delete(sound.id);
+          saveSet(favoriteKey, favorites);
+          if ($("favoritesOnly").checked) render();
+        });
+        label.append(check, document.createTextNode("Favorite — optional preference"));
+        card.append(
+          make("div", "pack", sound.pack),
+          make("h2", "", sound.file),
+          make("div", "tags", sound.tags.join(" · ")),
+          button, label, note
+        );
+        $("grid").append(card);
+        button.addEventListener("click", () => play(sound, card, button, note));
       }
+      const counts = Object.keys(packs).map(pack =>
+        pack + ": " + sounds.filter(s => s.pack === pack).length
+      ).join(" · ");
+      $("status").textContent =
+        sounds.length + " audio files in the full library · " + counts +
+        " · Showing " + visible.length + ".";
+    }
 
-      function soundURL(sound) {
-        const pack = catalog.packs[sound.pack];
-        if (!pack || typeof pack.directory !== 'string') throw new Error('Invalid pack.');
-        const url = new URL(catalog.baseUrl + pack.directory + sound.file);
-        if (url.protocol !== 'https:') throw new Error('Audio must use HTTPS.');
-        return url.href;
-      }
+    async function play(sound, card, button, note) {
+      if (active && active.card === card) { stopSound(); return; }
+      stopSound();
+      const base = "https://raw.githubusercontent.com/rezabahrami89/ferman-sound-catalog/" + revision + "/";
+      const encodedPath = sound.path.split("/").map(encodeURIComponent).join("/");
+      const audio = new Audio(base + encodedPath);
+      audio.preload = "none";
+      audio.volume = Number($("volume").value);
+      const session = {audio, card, button, note, timer:0};
+      active = session;
+      card.classList.add("playing");
+      button.textContent = "Cancel loading";
+      note.textContent = "Loading…";
 
-      function render() {
+      function fail(text) {
+        if (active !== session) return;
         stopSound();
-        grid.replaceChildren();
-        const sounds = catalog.sounds.filter(s => filter.value === 'all' || s.pack === filter.value);
-        for (const sound of sounds) {
-          const card = element('article', 'card');
-          card.append(
-            element('div', 'pack', sound.pack),
-            element('h2', '', sound.id.replace(/-/g, ' ')),
-            element('div', 'filename', sound.file),
-            element('div', 'events', (sound.events || []).join(' · '))
-          );
-          const button = element('button', 'play', 'Play sound');
-          button.type = 'button';
-          button.setAttribute('aria-label', 'Play ' + sound.id);
-          const pick = element('label', 'pick');
-          const checkbox = document.createElement('input');
-          checkbox.type = 'checkbox';
-          checkbox.checked = selected.has(sound.id);
-          checkbox.addEventListener('change', () => {
-            if (checkbox.checked) selected.add(sound.id);
-            else selected.delete(sound.id);
-            saveSelection();
-          });
-          pick.append(checkbox, document.createTextNode('Keep on my shortlist'));
-          const note = element('div', 'note', 'Not yet auditioned in this session.');
-          note.setAttribute('aria-live', 'polite');
-          card.append(button, pick, note);
-          grid.append(card);
-
-          button.addEventListener('click', async () => {
-            if (active && active.card === card) {
-              stopSound();
-              return;
-            }
-            stopSound();
-            let audio;
-            try { audio = new Audio(soundURL(sound)); }
-            catch (_) {
-              note.textContent = 'Invalid audio URL. Check the catalog.';
-              return;
-            }
-            audio.preload = 'none';
-            const session = { audio, card, button, note };
-            active = session;
-            card.classList.add('playing');
-            button.disabled = true;
-            button.textContent = 'Loading…';
-            note.textContent = 'Loading audio…';
-
-            const fail = () => {
-              if (active !== session) return;
-              stopSound();
-              note.textContent = 'Playback failed. Check your connection, file URL, or browser OGG support.';
-            };
-            audio.addEventListener('error', fail, { once:true });
-            audio.addEventListener('ended', () => {
-              if (active !== session) return;
-              stopSound();
-              note.textContent = 'Finished. Add to shortlist if it fits.';
-            }, { once:true });
-            audio.addEventListener('loadedmetadata', () => {
-              if (active !== session) return;
-              if (Number.isFinite(audio.duration)) {
-                note.textContent = 'Duration: ' + audio.duration.toFixed(2) + ' seconds';
-              }
-            }, { once:true });
-
-            try {
-              await audio.play();
-              if (active !== session) return;
-              button.disabled = false;
-              button.textContent = 'Stop sound';
-            } catch (_) { fail(); }
-          });
-        }
-        status.textContent = sounds.length + ' candidates shown. Click Play to listen.';
+        note.textContent = text;
       }
 
-      document.getElementById('stop').addEventListener('click', stopSound);
-      filter.addEventListener('change', () => { if (catalog) render(); });
-      document.addEventListener('visibilitychange', () => {
-        if (document.hidden) stopSound();
-      });
-
-      exportButton.addEventListener('click', () => {
-        const output = {
-          name: 'Ferman Sound Shortlist',
-          status: 'user-shortlisted-not-final-brand-approval',
-          selectedSounds: catalog.sounds.filter(s => selected.has(s.id))
-        };
-        const blob = new Blob([JSON.stringify(output, null, 2)], { type:'application/json' });
-        const url = URL.createObjectURL(blob);
-        const link = document.createElement('a');
-        link.href = url;
-        link.download = 'ferman-sound-shortlist.json';
-        document.body.append(link);
-        link.click();
-        link.remove();
-        setTimeout(() => URL.revokeObjectURL(url), 10000);
-      });
-
-      async function loadCatalog() {
-        let urls = [root + 'sound-catalog.json'];
-        if (location.protocol === 'https:' || location.protocol === 'http:') {
-          urls.unshift(new URL('./sound-catalog.json', location.href).href);
+      session.timer = setTimeout(() =>
+        fail("Loading timed out. Try again or check your connection."), 20000);
+      audio.addEventListener("error", () =>
+        fail("Could not play this file. Check connection or browser audio-format support."), {once:true});
+      audio.addEventListener("loadedmetadata", () => {
+        if (active === session && Number.isFinite(audio.duration)) {
+          note.textContent = "Duration: " + audio.duration.toFixed(2) + " seconds";
         }
-        for (const url of [...new Set(urls)]) {
-          try {
-            const response = await fetch(url, { cache:'no-store' });
-            if (!response.ok) throw new Error('HTTP ' + response.status);
-            const data = await response.json();
-            if (!data || !Array.isArray(data.sounds) || !data.packs ||
-                typeof data.baseUrl !== 'string') throw new Error('Invalid catalog.');
-            catalog = data;
-            exportButton.disabled = false;
-            render();
-            return;
-          } catch (_) {}
-        }
-        status.textContent = 'Could not load sound-catalog.json. Confirm it is committed at the repository root, then reload.';
+      }, {once:true});
+      audio.addEventListener("ended", () => {
+        if (active !== session) return;
+        stopSound();
+        note.textContent = "Playback finished. Favoriting is optional.";
+      }, {once:true});
+
+      try {
+        await audio.play();
+        if (active !== session) return;
+        clearTimeout(session.timer);
+        button.textContent = "Stop sound";
+        auditioned.add(sound.id);
+        saveSet(auditionKey, auditioned);
+      } catch (_) {
+        fail("Playback unavailable. Try again in a browser that supports this audio format.");
       }
-      loadCatalog();
-    })();
+    }
+
+    function exportCatalog(favoritesOnly) {
+      const selected = favoritesOnly ? sounds.filter(s => favorites.has(s.id)) : sounds;
+      const data = {
+        schemaVersion:"2.0.0",
+        name:favoritesOnly ? "Ferman Sound Favorites" : "Ferman Full Sound Library",
+        status:"library-not-final-brand-approval",
+        repository,
+        revision,
+        baseUrl:"https://raw.githubusercontent.com/rezabahrami89/ferman-sound-catalog/" + revision + "/",
+        credit:"Sound assets by Kenney",
+        packs,
+        selectionPolicy:{
+          scope:favoritesOnly ? "favorites-export" : "full-library",
+          favoritesAreExclusive:false,
+          tagsAreFilenameInferences:true,
+          auditionInProjectBeforeFinalMix:true,
+          preloadOnlyProjectSounds:true,
+          continueSilentlyOnAudioFailure:true,
+          requireUserGestureToEnableAudio:true
+        },
+        sounds:selected.map(sound => ({
+          ...sound,
+          favorite:favorites.has(sound.id),
+          reviewStatus:auditioned.has(sound.id) ? "played-in-user-browser" : "not-auditioned",
+          brandApproval:"not-final"
+        }))
+      };
+      const blob = new Blob([JSON.stringify(data, null, 2)], {type:"application/json"});
+      const url = URL.createObjectURL(blob);
+      const link = document.createElement("a");
+      link.href = url;
+      link.download = favoritesOnly ? "ferman-sound-favorites.json" : "ferman-full-sound-catalog.json";
+      document.body.append(link);
+      link.click();
+      link.remove();
+      setTimeout(() => URL.revokeObjectURL(url), 10000);
+    }
+
+    async function loadLibrary() {
+      if (loading) return;
+      loading = true;
+      stopSound();
+      $("reload").disabled = true;
+      $("exportAll").disabled = $("exportFavorites").disabled = true;
+      $("status").textContent = "Discovering the full repository library…";
+      const controller = new AbortController();
+      const timer = setTimeout(() => controller.abort(), 20000);
+      try {
+        const response = await fetch(api, {
+          signal:controller.signal,
+          headers:{"Accept":"application/vnd.github+json"},
+          cache:"no-store"
+        });
+        if (!response.ok) {
+          throw new Error(response.status === 403 || response.status === 429
+            ? "GitHub API access is limited, possibly by rate limits. Try again later."
+            : "GitHub returned HTTP " + response.status + ".");
+        }
+        const data = await response.json();
+        if (data.truncated) throw new Error("GitHub returned an incomplete tree; refusing to export a partial library.");
+        if (!Array.isArray(data.tree) || !/^[a-f0-9]{40}$/i.test(data.sha || "")) {
+          throw new Error("Unexpected repository response.");
+        }
+        const discovered = [];
+        for (const entry of data.tree) {
+          if (entry.type !== "blob" || !/\.(ogg|mp3|wav|m4a|aac|flac)$/i.test(entry.path)) continue;
+          const pack = Object.keys(packs).find(key => entry.path.startsWith(packs[key].directory));
+          if (!pack) continue;
+          const file = entry.path.slice(packs[pack].directory.length);
+          discovered.push({
+            id:pack + "/" + file,
+            pack,
+            file,
+            path:entry.path,
+            bytes:entry.size || 0,
+            tags:inferTags(file)
+          });
+        }
+        if (!discovered.length) throw new Error("No supported audio files found in the configured packs.");
+        revision = data.sha;
+        sounds = discovered.sort((a,b) => a.id.localeCompare(b.id));
+        migrateFavorites();
+        $("exportAll").disabled = $("exportFavorites").disabled = false;
+        render();
+      } catch (error) {
+        $("status").textContent = error.name === "AbortError"
+          ? "Repository discovery timed out. Click Reload library to retry."
+          : error.message;
+      } finally {
+        clearTimeout(timer);
+        loading = false;
+        $("reload").disabled = false;
+      }
+    }
+
+    $("search").addEventListener("input", () => { if (!loading) render(); });
+    $("pack").addEventListener("change", () => { if (!loading) render(); });
+    $("favoritesOnly").addEventListener("change", () => { if (!loading) render(); });
+    $("stop").addEventListener("click", stopSound);
+    $("volume").addEventListener("input", () => {
+      if (active) active.audio.volume = Number($("volume").value);
+    });
+    $("exportAll").addEventListener("click", () => exportCatalog(false));
+    $("exportFavorites").addEventListener("click", () => exportCatalog(true));
+    $("reload").addEventListener("click", loadLibrary);
+    document.addEventListener("visibilitychange", () => { if (document.hidden) stopSound(); });
+    window.addEventListener("pagehide", stopSound);
+    loadLibrary();
+  })();
   </script>
 </body>
 </html>
