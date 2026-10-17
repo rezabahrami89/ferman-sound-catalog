@@ -1,0 +1,239 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Ferman — Sound Preview</title>
+  <style>
+    @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap');
+    :root { color-scheme: light; --bg:#f2f2f2; --ink:#000033; --accent:#df4f4f; }
+    * { box-sizing:border-box; }
+    body { margin:0; background:var(--bg); color:var(--ink); font-family:Inter,system-ui,sans-serif; }
+    main { max-width:1100px; margin:auto; padding:48px 24px; }
+    .eyebrow { font-size:12px; font-weight:700; letter-spacing:3px; color:var(--accent); }
+    h1 { font-size:clamp(32px,5vw,56px); letter-spacing:-2px; margin:14px 0; }
+    .intro { max-width:680px; line-height:1.7; opacity:.75; }
+    .toolbar { display:flex; align-items:center; flex-wrap:wrap; gap:12px; margin:28px 0; }
+    button,select { font:inherit; border:1px solid #d8d8e0; border-radius:10px; padding:12px 16px; }
+    button { cursor:pointer; background:white; color:var(--ink); font-weight:600; }
+    button:hover { border-color:var(--accent); }
+    button:focus-visible,select:focus-visible,input:focus-visible { outline:3px solid var(--accent); outline-offset:3px; }
+    button:disabled { cursor:wait; opacity:.5; }
+    select { background:white; color:var(--ink); }
+    #status { margin-bottom:20px; font-size:14px; line-height:1.6; }
+    .grid { display:grid; grid-template-columns:repeat(auto-fit,minmax(270px,1fr)); gap:16px; }
+    .card { background:white; border:1px solid #e3e3e9; border-radius:18px; padding:24px; }
+    .card.playing { border-color:var(--accent); box-shadow:0 0 0 1px var(--accent); }
+    .pack { font-size:11px; text-transform:uppercase; letter-spacing:2px; opacity:.6; }
+    h2 { margin:12px 0; font-size:20px; }
+    .filename { font-size:12px; overflow-wrap:anywhere; opacity:.65; }
+    .events { min-height:44px; font-size:13px; line-height:1.6; margin:16px 0; }
+    .play { background:var(--ink); color:white; border-color:var(--ink); width:100%; }
+    .pick { display:flex; align-items:center; gap:8px; font-size:13px; margin-top:18px; }
+    input { accent-color:var(--accent); }
+    .note { min-height:22px; margin-top:14px; font-size:12px; line-height:1.5; opacity:.7; }
+    footer { margin-top:32px; font-size:12px; line-height:1.8; opacity:.7; }
+  </style>
+</head>
+<body>
+  <main>
+    <div class="eyebrow">FERMAN / SOUND LAB</div>
+    <h1>Listen. Compare. Shortlist.</h1>
+    <p class="intro">Audition the starter sound candidates. These mappings are provisional:
+      choose sounds by listening, not by filename alone. Nothing plays automatically.</p>
+    <div class="toolbar">
+      <label for="pack">Pack</label>
+      <select id="pack">
+        <option value="all">All packs</option>
+        <option value="interface">Interface</option>
+        <option value="impact">Impact</option>
+        <option value="scifi">Sci-Fi</option>
+      </select>
+      <button id="stop" type="button">Stop sound</button>
+      <button id="export" type="button" disabled>Export shortlist</button>
+    </div>
+    <div id="status" role="status" aria-live="polite">Loading catalog…</div>
+    <section id="grid" class="grid" aria-label="Sound candidates"></section>
+    <footer>
+      Assets by Kenney · CC0 · Selection is stored only in this browser when storage is available.<br>
+      Playback uses each file’s original level. This is not a loudness-normalized comparison
+      or a synchronized production player. Start with a low device volume.
+    </footer>
+  </main>
+  <script>
+    (() => {
+      'use strict';
+      const root = 'https://raw.githubusercontent.com/rezabahrami89/ferman-sound-catalog/main/';
+      const status = document.getElementById('status');
+      const grid = document.getElementById('grid');
+      const filter = document.getElementById('pack');
+      const exportButton = document.getElementById('export');
+      const storageKey = 'ferman-sound-shortlist-v1';
+      let catalog = null;
+      let active = null;
+      let selected = new Set();
+      try {
+        const saved = JSON.parse(localStorage.getItem(storageKey) || '[]');
+        if (Array.isArray(saved)) selected = new Set(saved.filter(x => typeof x === 'string'));
+      } catch (_) {}
+
+      function saveSelection() {
+        try { localStorage.setItem(storageKey, JSON.stringify([...selected])); }
+        catch (_) { status.textContent = 'Shortlist updated for this session. Browser storage is unavailable.'; }
+      }
+
+      function stopSound() {
+        if (!active) return;
+        const current = active;
+        active = null;
+        current.audio.pause();
+        current.audio.removeAttribute('src');
+        current.audio.load();
+        current.card.classList.remove('playing');
+        current.button.textContent = 'Play sound';
+        current.button.disabled = false;
+        current.note.textContent = 'Stopped.';
+      }
+
+      function element(tag, className, text) {
+        const node = document.createElement(tag);
+        if (className) node.className = className;
+        if (text !== undefined) node.textContent = text;
+        return node;
+      }
+
+      function soundURL(sound) {
+        const pack = catalog.packs[sound.pack];
+        if (!pack || typeof pack.directory !== 'string') throw new Error('Invalid pack.');
+        const url = new URL(catalog.baseUrl + pack.directory + sound.file);
+        if (url.protocol !== 'https:') throw new Error('Audio must use HTTPS.');
+        return url.href;
+      }
+
+      function render() {
+        stopSound();
+        grid.replaceChildren();
+        const sounds = catalog.sounds.filter(s => filter.value === 'all' || s.pack === filter.value);
+        for (const sound of sounds) {
+          const card = element('article', 'card');
+          card.append(
+            element('div', 'pack', sound.pack),
+            element('h2', '', sound.id.replace(/-/g, ' ')),
+            element('div', 'filename', sound.file),
+            element('div', 'events', (sound.events || []).join(' · '))
+          );
+          const button = element('button', 'play', 'Play sound');
+          button.type = 'button';
+          button.setAttribute('aria-label', 'Play ' + sound.id);
+          const pick = element('label', 'pick');
+          const checkbox = document.createElement('input');
+          checkbox.type = 'checkbox';
+          checkbox.checked = selected.has(sound.id);
+          checkbox.addEventListener('change', () => {
+            if (checkbox.checked) selected.add(sound.id);
+            else selected.delete(sound.id);
+            saveSelection();
+          });
+          pick.append(checkbox, document.createTextNode('Keep on my shortlist'));
+          const note = element('div', 'note', 'Not yet auditioned in this session.');
+          note.setAttribute('aria-live', 'polite');
+          card.append(button, pick, note);
+          grid.append(card);
+
+          button.addEventListener('click', async () => {
+            if (active && active.card === card) {
+              stopSound();
+              return;
+            }
+            stopSound();
+            let audio;
+            try { audio = new Audio(soundURL(sound)); }
+            catch (_) {
+              note.textContent = 'Invalid audio URL. Check the catalog.';
+              return;
+            }
+            audio.preload = 'none';
+            const session = { audio, card, button, note };
+            active = session;
+            card.classList.add('playing');
+            button.disabled = true;
+            button.textContent = 'Loading…';
+            note.textContent = 'Loading audio…';
+
+            const fail = () => {
+              if (active !== session) return;
+              stopSound();
+              note.textContent = 'Playback failed. Check your connection, file URL, or browser OGG support.';
+            };
+            audio.addEventListener('error', fail, { once:true });
+            audio.addEventListener('ended', () => {
+              if (active !== session) return;
+              stopSound();
+              note.textContent = 'Finished. Add to shortlist if it fits.';
+            }, { once:true });
+            audio.addEventListener('loadedmetadata', () => {
+              if (active !== session) return;
+              if (Number.isFinite(audio.duration)) {
+                note.textContent = 'Duration: ' + audio.duration.toFixed(2) + ' seconds';
+              }
+            }, { once:true });
+
+            try {
+              await audio.play();
+              if (active !== session) return;
+              button.disabled = false;
+              button.textContent = 'Stop sound';
+            } catch (_) { fail(); }
+          });
+        }
+        status.textContent = sounds.length + ' candidates shown. Click Play to listen.';
+      }
+
+      document.getElementById('stop').addEventListener('click', stopSound);
+      filter.addEventListener('change', () => { if (catalog) render(); });
+      document.addEventListener('visibilitychange', () => {
+        if (document.hidden) stopSound();
+      });
+
+      exportButton.addEventListener('click', () => {
+        const output = {
+          name: 'Ferman Sound Shortlist',
+          status: 'user-shortlisted-not-final-brand-approval',
+          selectedSounds: catalog.sounds.filter(s => selected.has(s.id))
+        };
+        const blob = new Blob([JSON.stringify(output, null, 2)], { type:'application/json' });
+        const url = URL.createObjectURL(blob);
+        const link = document.createElement('a');
+        link.href = url;
+        link.download = 'ferman-sound-shortlist.json';
+        document.body.append(link);
+        link.click();
+        link.remove();
+        setTimeout(() => URL.revokeObjectURL(url), 10000);
+      });
+
+      async function loadCatalog() {
+        let urls = [root + 'sound-catalog.json'];
+        if (location.protocol === 'https:' || location.protocol === 'http:') {
+          urls.unshift(new URL('./sound-catalog.json', location.href).href);
+        }
+        for (const url of [...new Set(urls)]) {
+          try {
+            const response = await fetch(url, { cache:'no-store' });
+            if (!response.ok) throw new Error('HTTP ' + response.status);
+            const data = await response.json();
+            if (!data || !Array.isArray(data.sounds) || !data.packs ||
+                typeof data.baseUrl !== 'string') throw new Error('Invalid catalog.');
+            catalog = data;
+            exportButton.disabled = false;
+            render();
+            return;
+          } catch (_) {}
+        }
+        status.textContent = 'Could not load sound-catalog.json. Confirm it is committed at the repository root, then reload.';
+      }
+      loadCatalog();
+    })();
+  </script>
+</body>
+</html>
