@@ -1,0 +1,1015 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1">
+  <title>Ferman — Full-Library Motion Baseline</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+  <script type="importmap">
+    {"imports":{
+      "three":"https://cdn.jsdelivr.net/npm/three@0.169.0/build/three.module.js",
+      "three/addons/":"https://cdn.jsdelivr.net/npm/three@0.169.0/examples/jsm/"
+    }}
+  </script>
+  <style>
+    :root{--paper:#f2f2f2;--navy:#000033;--coral:#df4f4f}
+    *{box-sizing:border-box}
+    body{margin:0;background:#e3e3e8;color:var(--navy);font-family:Inter,Arial,sans-serif}
+    main{min-height:100svh;display:flex;flex-direction:column;align-items:center;gap:14px;padding:18px}
+    .stage{width:min(440px,94vw);aspect-ratio:9/16;position:relative;overflow:hidden;isolation:isolate;container-type:inline-size;background:var(--paper)}
+    .brand{position:absolute;left:10%;top:8%;font-size:6.6cqw;font-weight:800;letter-spacing:-.045em}
+    .marker{position:absolute;right:10%;top:8%;width:8%;aspect-ratio:1}
+    .marker svg{width:100%;height:100%;display:block}
+    .media{position:absolute;left:8%;right:8%;top:21%;height:44%;overflow:hidden;background:#e9e9ec}
+    #backgroundVideo{position:absolute;width:100%;height:100%;object-fit:cover;opacity:.32}
+    .canvas-host{position:absolute;inset:0}
+    .canvas-host canvas{display:block;width:100%;height:100%}
+    .fallback{position:absolute;inset:0;display:grid;place-items:center}
+    .fallback svg{width:78%;height:78%;overflow:visible}
+    .copy{position:absolute;z-index:2;left:10%;right:8%;top:70%;margin:0;color:var(--navy);font-size:9cqw;font-weight:700;line-height:1.12;letter-spacing:-.05em}
+    .mask{display:block;overflow:hidden;padding-bottom:.12em;margin-bottom:-.12em}
+    .line{display:block;white-space:nowrap;opacity:1}
+    .rule{position:absolute;left:10%;top:89%;width:15%;height:.8cqw;background:var(--coral);transform-origin:left center}
+    .panel{width:min(900px,96vw);background:rgba(255,255,255,.65);border:1px solid #ccccd6;border-radius:14px;padding:14px}
+    .row{display:flex;flex-wrap:wrap;gap:9px;align-items:center;margin:9px 0}
+    button,select,.file{font:600 12px Inter,Arial,sans-serif;border:1px solid var(--navy);border-radius:8px;padding:9px 12px;background:white;color:var(--navy)}
+    button,.file{cursor:pointer}
+    button.primary{background:var(--navy);color:var(--paper)}
+    button:disabled{opacity:.4;cursor:not-allowed}
+    button:focus-visible,input:focus-visible,select:focus-visible,summary:focus-visible{outline:3px solid var(--coral);outline-offset:3px}
+    .file{position:relative;overflow:hidden;display:inline-block}
+    .file input{position:absolute;inset:0;width:100%;height:100%;opacity:0;cursor:pointer}
+    label{font-size:12px}
+    input[type=range]{width:90px;accent-color:var(--navy)}
+    input[type=url],input[type=search],input[type=number]{border:1px solid #a4a4b4;border-radius:8px;padding:9px;font:12px Inter,Arial,sans-serif}
+    input[type=url],input[type=search]{flex:1;min-width:150px}
+    summary{font-weight:600;font-size:13px;cursor:pointer}
+    .status{font-size:12px;line-height:1.55;margin:5px 0}
+    .small{font-size:11px;line-height:1.55;color:#525269}
+    .badge{display:inline-block;font-size:11px;background:#e7e7ee;border-radius:6px;padding:4px 8px}
+    .cue{border:1px solid #d0d0dc;border-radius:10px;padding:10px;margin:10px 0}
+    .cue select{max-width:100%;flex:1;min-width:160px}
+    .cue input[type=number]{width:76px}
+    .cue-title{font-size:12px;font-weight:700;margin-bottom:6px}
+    [hidden]{display:none!important}
+  </style>
+</head>
+<body>
+  <main>
+    <section class="stage" id="stage" aria-label="Ferman motion-system demonstration">
+      <div class="brand">Ferman</div>
+      <div class="marker" id="lottieHost" aria-hidden="true">
+        <svg viewBox="0 0 100 100"><circle cx="50" cy="50" r="38" fill="#df4f4f"/></svg>
+      </div>
+      <div class="media">
+        <!-- Optional starter reference, not loaded automatically:
+        Source: https://pixabay.com/videos/id-283533/
+        Creator: BlenderTimer
+        MP4: https://cdn.pixabay.com/video/2025/06/03/283533_large.mp4
+        Preserve actual source-page attribution for future campaign assets. -->
+        <video id="backgroundVideo" muted playsinline preload="auto" disablepictureinpicture hidden></video>
+        <div class="fallback" id="fallback" aria-hidden="true">
+          <svg viewBox="0 0 300 300">
+            <ellipse cx="150" cy="247" rx="73" ry="12" fill="#000033" opacity=".08"/>
+            <g id="fallbackObject">
+              <circle cx="150" cy="139" r="76" fill="none" stroke="#df4f4f" stroke-width="33"/>
+              <ellipse cx="150" cy="139" rx="42" ry="80" fill="none" stroke="#000033" stroke-width="10" transform="rotate(32 150 139)"/>
+            </g>
+          </svg>
+        </div>
+        <div class="canvas-host" id="canvasHost"></div>
+      </div>
+      <h1 class="copy">
+        <span class="mask"><span class="line" id="line1">Ideas in motion.</span></span>
+        <span class="mask"><span class="line" id="line2">Built with intent.</span></span>
+      </h1>
+      <div class="rule"></div>
+    </section>
+
+    <section class="panel" aria-label="Production controls">
+      <div class="row">
+        <button class="primary" id="play" disabled>Play / Restart</button>
+        <button id="pause" disabled>Pause</button>
+        <button id="resume" disabled>Resume</button>
+        <label>Mode
+          <select id="mode">
+            <option value="preview">Preview</option>
+            <option value="record">Recording — one pass</option>
+          </select>
+        </label>
+        <label><input type="checkbox" id="loop" checked> Loop preview</label>
+        <span class="badge" id="clockLabel">Silent visual clock</span>
+      </div>
+      <p class="status" id="status" role="status" aria-live="polite">Preparing motion system…</p>
+
+      <div class="row">
+        <label><input id="enableAudio" type="checkbox"> Enable audio on Play</label>
+        <label><input id="enableSFX" type="checkbox" checked> Project sound effects</label>
+        <label><input id="mute" type="checkbox"> Mute</label>
+        <label>Master volume <input id="volume" type="range" min="0" max="1" step=".01" value=".5"></label>
+      </div>
+      <p class="status" id="audioStatus" role="status" aria-live="polite">Silent startup. Enable audio, then click Play.</p>
+
+      <details open>
+        <summary>Full-library project cues</summary>
+        <p class="status" id="catalogStatus" role="status" aria-live="polite">Loading full catalog…</p>
+        <div class="row">
+          <button id="reloadCatalog">Reload catalog</button>
+          <label class="file">Load local catalog JSON
+            <input id="catalogFile" type="file" accept=".json,application/json" aria-label="Load local full sound catalog">
+          </label>
+          <button id="addCue" disabled>Add cue</button>
+          <button id="exportCues">Export project cues</button>
+        </div>
+        <div id="cueList"></div>
+        <p class="small">
+          Search filters each cue’s choices; it does not restrict the library.
+          Initial cues are demonstration candidates, not brand-approved selections.
+          Gain values are provisional—not a normalized or mastered mix.
+          Cue starts and all audio tails are limited to the active 0–13 second window.
+        </p>
+      </details>
+
+      <details>
+        <summary>Assets and 3D recovery</summary>
+        <p class="status" id="threeStatus">Preparing Three.js…</p>
+        <div class="row">
+          <button id="retry3d">Retry 3D</button>
+          <button id="useFallback">Use stylized fallback</button>
+        </div>
+        <div class="row">
+          <label class="file">Choose local MP4
+            <input id="videoFile" type="file" accept=".mp4,video/mp4" aria-label="Choose local MP4">
+          </label>
+          <button id="retryVideo" disabled>Retry video</button>
+          <button id="withoutVideo">Continue without video</button>
+        </div>
+        <div class="row">
+          <input id="videoURL" type="url" placeholder="Optional supplied or verified MP4 URL" aria-label="Optional video URL">
+          <button id="loadRemote">Load URL</button>
+        </div>
+        <p class="status" id="videoStatus" role="status" aria-live="polite">Video is optional and disabled.</p>
+        <div class="row">
+          <label class="file">Choose local MP3
+            <input id="audioFile" type="file" accept=".mp3,audio/mpeg" aria-label="Choose local MP3">
+          </label>
+          <button id="removeAudio" disabled>Remove MP3</button>
+        </div>
+        <p class="status" id="musicStatus">No local MP3 selected.</p>
+        <p class="small">Local files remain on your device. Use authorized media. No API keys are required.</p>
+      </details>
+      <p class="small">
+        Full-library audio revision · 15 seconds · silent final hold from 13–15 seconds.
+        Recording mode is a one-pass playback mode; it does not record or export an MP4.
+        Video synchronization is best-effort; audio is scheduled on the shared Web Audio clock.
+        Browser output latency can affect perceived synchronization.
+        Dependencies: GSAP, Three.js, optional Lottie, and Google Fonts.
+      </p>
+    </section>
+  </main>
+
+  <script>
+  (() => {
+    "use strict";
+    // ENGINE CONTRACT:
+    // Change artwork, buildScene(), buildTimeline(), and project cues for campaigns.
+    // Preserve transport tokens, readiness, clock, recovery and disposal.
+    // GSAP exclusively owns headline transforms. No sound callbacks in GSAP.
+    // All audible sources are scheduled from the composition clock.
+    const $ = id => document.getElementById(id);
+    const DURATION = 15, HOLD = 13;
+    const CATALOG_URL = "https://raw.githubusercontent.com/rezabahrami89/ferman-sound-catalog/main/sound-catalog.json";
+    const video = $("backgroundVideo");
+    const ui = {
+      status:$("status"), three:$("threeStatus"), video:$("videoStatus"),
+      audio:$("audioStatus"), play:$("play"), pause:$("pause"), resume:$("resume"),
+      mode:$("mode"), loop:$("loop"), clock:$("clockLabel")
+    };
+    const state = {
+      core:false, disposed:false, phase:"loading", time:0,
+      starting:false, decoding:false, run:0, audioLoad:0, threeLoad:0,
+      catalogLoad:0, clock:"visual", epoch:0, base:0, raf:0, autoTimer:0,
+      videoEnabled:false, videoReady:false, videoHeld:false,
+      videoGeneration:0, lastCorrection:-1, buffering:false, audioActivated:false
+    };
+    let timeline = null, lottieAnimation = null;
+    let audioContext = null, output = null, musicBuffer = null;
+    let catalog = null, soundMap = new Map();
+    const cache = new Map(), sources = new Set(), fetchControllers = new Set();
+    let catalogController = null;
+    let videoWatchCleanup = null, videoSourceURL = "", localVideoURL = null;
+    let renderer = null, scene = null, camera = null, objectGroup = null;
+    let environmentTarget = null, resizeObserver = null, contextLossHandler = null;
+    const pose = {x:0,y:-.16,z:0,rx:.45,ry:-.6,rz:-.25,scale:.76,cameraZ:7.1,marker:85};
+    let cueSerial = 3;
+    let cues = [
+      {key:1,label:"First headline entry",time:1,soundId:"interface/open_001.ogg",gain:.28},
+      {key:2,label:"Second headline entry",time:4,soundId:"interface/open_002.ogg",gain:.24},
+      {key:3,label:"Accent rule reveal",time:4.6,soundId:"interface/select_001.ogg",gain:.2}
+    ];
+
+    function message(text) { ui.status.textContent = text; }
+    function bounded(promise,ms,label) {
+      let timer;
+      return Promise.race([
+        promise,
+        new Promise((_,reject) => { timer = setTimeout(() => reject(new Error(label+" timed out.")),ms); })
+      ]).finally(() => clearTimeout(timer));
+    }
+    function loadClassic(url,name) {
+      if (window[name]) return Promise.resolve(window[name]);
+      return bounded(new Promise((resolve,reject) => {
+        const script = document.createElement("script");
+        script.src = url;
+        script.onload = () => window[name] ? resolve(window[name]) : reject(new Error(name+" unavailable."));
+        script.onerror = () => reject(new Error(name+" CDN loading failed."));
+        document.head.appendChild(script);
+      }),15000,name);
+    }
+    function updateControls() {
+      const blocked = !state.core || state.disposed || state.starting || state.decoding ||
+        (state.videoEnabled && !state.videoReady);
+      ui.play.disabled = blocked;
+      ui.pause.disabled = state.phase !== "playing";
+      ui.resume.disabled = blocked || state.phase !== "paused";
+      $("removeAudio").disabled = !musicBuffer || state.decoding;
+      $("retryVideo").disabled = !videoSourceURL;
+      ui.loop.disabled = ui.mode.value === "record";
+      $("addCue").disabled = !catalog || state.disposed;
+      ui.clock.textContent = state.clock === "audio" ? "Shared audio clock" : "Silent visual clock";
+    }
+    function cancelAutoplay() { clearTimeout(state.autoTimer); state.autoTimer = 0; }
+    function stopAudio() {
+      for (const item of sources) {
+        item.source.onended = null;
+        try { item.source.stop(); } catch (_) {}
+        try { item.source.disconnect(); item.gain.disconnect(); } catch (_) {}
+      }
+      sources.clear();
+    }
+    function stopTransport() {
+      state.run++;
+      cancelAnimationFrame(state.raf);
+      state.raf = 0;
+      state.starting = false;
+      for (const controller of fetchControllers) controller.abort();
+      fetchControllers.clear();
+      stopAudio();
+      video.pause();
+    }
+    function resetTransport(text) {
+      cancelAutoplay();
+      stopTransport();
+      state.time = 0;
+      state.clock = "visual";
+      state.phase = state.core ? "ready" : "loading";
+      renderAt(0);
+      updateControls();
+      if (text) message(text);
+    }
+    function clockTime() {
+      const now = state.clock === "audio" ? audioContext.currentTime : performance.now()/1000;
+      return Math.max(0,Math.min(DURATION,state.base+Math.max(0,now-state.epoch)));
+    }
+    function resetVideoTracking() {
+      state.videoHeld = false; state.lastCorrection = -1; state.buffering = false;
+      video.playbackRate = 1;
+    }
+
+    function renderAt(time) {
+      if (!timeline) return;
+      const t = Math.max(0,Math.min(DURATION,time));
+      timeline.totalTime(t,true);
+      $("lottieHost").style.transform = "scale("+pose.marker/100+")";
+      if (lottieAnimation) {
+        try {
+          const frame = Math.min(lottieAnimation.totalFrames-1,Math.min(t,HOLD)*30);
+          lottieAnimation.goToAndStop(Math.max(0,frame),true);
+        } catch (_) {
+          lottieAnimation.destroy(); lottieAnimation = null;
+          $("lottieHost").innerHTML = '<svg viewBox="0 0 100 100"><circle cx="50" cy="50" r="38" fill="#df4f4f"/></svg>';
+        }
+      }
+      const fallback = $("fallbackObject");
+      fallback.style.transformOrigin = "150px 139px";
+      fallback.style.transform = "translateY("+(-pose.y*40)+"px) rotate("+pose.rz*45+"deg) scale("+pose.scale+")";
+      if (renderer && objectGroup && camera) {
+        objectGroup.position.set(pose.x,pose.y,pose.z);
+        objectGroup.rotation.set(pose.rx,pose.ry,pose.rz);
+        objectGroup.scale.setScalar(pose.scale);
+        camera.position.z = pose.cameraZ;
+        try { renderer.render(scene,camera); }
+        catch (error) { fail3D("3D rendering failed: "+error.message); }
+      }
+    }
+    function buildTimeline() {
+      gsap.set("#line1,#line2",{clearProps:"transform",x:0,y:0,xPercent:0,yPercent:0,opacity:1});
+      gsap.set(".rule",{scaleX:0});
+      timeline = gsap.timeline({paused:true});
+      timeline.to(pose,{scale:1,y:.04,duration:2.2,ease:"power3.out"},0);
+      timeline.to(pose,{ry:.35,rx:.18,rz:.08,duration:5.5,ease:"power2.inOut"},1);
+      timeline.to(pose,{cameraZ:6.5,duration:6,ease:"power2.inOut"},1.5);
+      timeline.fromTo("#line1",{y:0,yPercent:115,opacity:0},
+        {y:0,yPercent:0,opacity:1,duration:.9,ease:"power3.out",immediateRender:true},1);
+      timeline.fromTo("#line2",{y:0,yPercent:115,opacity:0},
+        {y:0,yPercent:0,opacity:1,duration:.9,ease:"power3.out",immediateRender:true},4);
+      timeline.to(".rule",{scaleX:1,duration:.75,ease:"power2.out"},4.6);
+      timeline.to(pose,{marker:112,duration:.55,ease:"power2.out"},1);
+      timeline.to(pose,{marker:100,duration:.7,ease:"power2.inOut"},1.55);
+      timeline.to(pose,{ry:.65,rx:.28,rz:-.08,duration:3.2,ease:"power2.inOut"},8);
+      timeline.to({}, {duration:2},HOLD);
+      timeline.pause(0);
+    }
+
+    function dispose3D() {
+      if (resizeObserver) { resizeObserver.disconnect(); resizeObserver = null; }
+      if (renderer && contextLossHandler) renderer.domElement.removeEventListener("webglcontextlost",contextLossHandler);
+      contextLossHandler = null;
+      const geometries = new Set(), materials = new Set();
+      if (scene) scene.traverse(obj => {
+        if (obj.geometry) geometries.add(obj.geometry);
+        if (obj.material) (Array.isArray(obj.material) ? obj.material : [obj.material]).forEach(m => materials.add(m));
+      });
+      geometries.forEach(g => g.dispose());
+      materials.forEach(m => m.dispose());
+      if (environmentTarget) { environmentTarget.dispose(); environmentTarget = null; }
+      if (renderer) { renderer.dispose(); renderer.domElement.remove(); }
+      renderer = scene = camera = objectGroup = null;
+    }
+    function fail3D(text) {
+      dispose3D(); $("fallback").hidden = false;
+      ui.three.textContent = text+" Stylized fallback is active; playback remains available.";
+    }
+    function buildScene(THREE,RoomEnvironment) {
+      dispose3D();
+      renderer = new THREE.WebGLRenderer({antialias:true,alpha:true,powerPreference:"high-performance"});
+      renderer.setPixelRatio(Math.min(window.devicePixelRatio || 1,1.75));
+      renderer.outputColorSpace = THREE.SRGBColorSpace;
+      renderer.toneMapping = THREE.ACESFilmicToneMapping;
+      renderer.toneMappingExposure = 1.15;
+      $("canvasHost").appendChild(renderer.domElement);
+      scene = new THREE.Scene();
+      camera = new THREE.PerspectiveCamera(35,1,.1,50);
+      camera.position.set(0,.12,pose.cameraZ);
+      camera.lookAt(0,0,0);
+      const pmrem = new THREE.PMREMGenerator(renderer), room = new RoomEnvironment();
+      try {
+        environmentTarget = pmrem.fromScene(room,.04);
+        scene.environment = environmentTarget.texture;
+        scene.environmentIntensity = 1;
+      } finally { room.dispose(); pmrem.dispose(); }
+      const key = new THREE.DirectionalLight(0xffffff,3);
+      key.position.set(-3,4,5); scene.add(key);
+      const fill = new THREE.DirectionalLight(0xdde5ff,1.8);
+      fill.position.set(3,-1,2); scene.add(fill);
+      scene.add(new THREE.HemisphereLight(0xffffff,0x000033,1));
+      objectGroup = new THREE.Group();
+      const coral = new THREE.MeshPhysicalMaterial({
+        color:0xdf4f4f,metalness:.2,roughness:.28,clearcoat:.65,clearcoatRoughness:.22
+      });
+      const navy = new THREE.MeshStandardMaterial({color:0x000033,metalness:.5,roughness:.3});
+      objectGroup.add(new THREE.Mesh(new THREE.TorusKnotGeometry(.83,.22,160,24,2,3),coral));
+      const ring = new THREE.Mesh(new THREE.TorusGeometry(1.31,.035,12,100),navy);
+      ring.rotation.x = Math.PI*.34; ring.rotation.y = Math.PI*.12;
+      objectGroup.add(ring); scene.add(objectGroup);
+      function resize() {
+        if (!renderer || !camera) return;
+        const box = $("canvasHost").getBoundingClientRect();
+        if (box.width < 1 || box.height < 1) return;
+        renderer.setSize(box.width,box.height,false);
+        camera.aspect = box.width/box.height;
+        camera.updateProjectionMatrix(); renderAt(state.time);
+      }
+      resizeObserver = new ResizeObserver(resize);
+      resizeObserver.observe($("canvasHost"));
+      contextLossHandler = event => {
+        event.preventDefault(); fail3D("WebGL context lost. Retry 3D reconstructs the scene.");
+      };
+      renderer.domElement.addEventListener("webglcontextlost",contextLossHandler);
+      $("fallback").hidden = true; resize();
+    }
+    async function initialize3D() {
+      const token = ++state.threeLoad;
+      ui.three.textContent = "Loading version-pinned Three.js and studio environment…";
+      try {
+        const [three,addon] = await bounded(Promise.all([
+          import("three"),import("three/addons/environments/RoomEnvironment.js")
+        ]),15000,"Three.js");
+        if (token !== state.threeLoad || state.disposed) return;
+        buildScene(three,addon.RoomEnvironment);
+        ui.three.textContent = "Browser 3D initialized. Check performance on the target device.";
+        renderAt(state.time);
+      } catch (error) {
+        if (token === state.threeLoad && !state.disposed) fail3D(error.message);
+      }
+    }
+    async function initializeLottie() {
+      try {
+        await loadClassic("https://cdn.jsdelivr.net/npm/lottie-web@5.12.2/build/player/lottie.min.js","lottie");
+        if (state.disposed) return;
+        const data = {
+          v:"5.12.2",fr:30,ip:0,op:450,w:100,h:100,ddd:0,assets:[],markers:[],
+          layers:[{
+            ddd:0,ind:1,ty:4,nm:"Original coral marker",sr:1,ip:0,op:450,st:0,bm:0,
+            ks:{o:{a:0,k:100},r:{a:0,k:0},p:{a:0,k:[50,50,0]},a:{a:0,k:[0,0,0]},s:{a:0,k:[100,100,100]}},
+            shapes:[
+              {ty:"el",d:1,p:{a:0,k:[0,0]},s:{a:0,k:[76,76]}},
+              {ty:"fl",c:{a:0,k:[223/255,79/255,79/255,1]},o:{a:0,k:100},r:1}
+            ]
+          }]
+        };
+        const holder = document.createElement("div");
+        holder.style.cssText = "width:100%;height:100%";
+        const anim = lottie.loadAnimation({container:holder,renderer:"svg",autoplay:false,loop:false,animationData:data});
+        try {
+          await bounded(new Promise((resolve,reject) => {
+            if (anim.isLoaded) return resolve();
+            anim.addEventListener("DOMLoaded",resolve);
+            anim.addEventListener("data_failed",() => reject(new Error("Lottie data failure.")));
+            anim.addEventListener("error",() => reject(new Error("Lottie renderer failure.")));
+          }),8000,"Lottie");
+          if (state.disposed) { anim.destroy(); return; }
+          lottieAnimation = anim; $("lottieHost").replaceChildren(holder); renderAt(state.time);
+        } catch (_) { anim.destroy(); }
+      } catch (_) { /* Embedded SVG remains available. */ }
+    }
+    async function fontsReady() {
+      if (!document.fonts) return;
+      try {
+        await bounded(Promise.all([
+          document.fonts.load('700 48px "Inter"'),document.fonts.load('800 32px "Inter"')
+        ]),6000,"Fonts");
+      } catch (_) { document.body.style.fontFamily = "Arial,sans-serif"; }
+    }
+
+    // FULL LIBRARY: catalog metadata is separate from project audio buffers.
+    function acceptCatalog(data) {
+      if (data?.schemaVersion !== "2.0.0" || !Array.isArray(data.sounds) ||
+          !data.packs || data.selectionPolicy?.scope !== "full-library") {
+        throw new Error("Load the schema 2.0 full-library catalog, not the old shortlist.");
+      }
+      const base = new URL(data.baseUrl);
+      if (base.protocol !== "https:") throw new Error("Catalog audio URLs must use HTTPS.");
+      if (!base.pathname.endsWith("/")) throw new Error("Catalog baseUrl needs a trailing slash.");
+      const entries = new Map();
+      for (const sound of data.sounds) {
+        const pack = data.packs[sound.pack];
+        if (typeof sound.id !== "string" || !pack || pack.license !== "CC0-1.0" ||
+            typeof sound.path !== "string" || typeof pack.directory !== "string" ||
+            !sound.path.startsWith(pack.directory) ||
+            !/\.(ogg|mp3|wav|m4a|aac|flac)$/i.test(sound.path) ||
+            sound.path.split("/").some(part => part === ".." || part === "." || !part)) {
+          throw new Error("Invalid sound entry or unsupported pack license.");
+        }
+        if (entries.has(sound.id)) throw new Error("Duplicate sound ID.");
+        const url = new URL(sound.path.split("/").map(encodeURIComponent).join("/"),base);
+        entries.set(sound.id,{...sound,url:url.href});
+      }
+      if (!entries.size) throw new Error("Catalog has no audio entries.");
+      resetTransport("Full library ready. Configure cues, then click Play.");
+      catalog = data; soundMap = entries; cache.clear();
+      $("catalogStatus").textContent = entries.size+" sounds available · favorites are not exclusive · audio loads only for project cues.";
+      renderCues(); updateControls();
+    }
+    async function loadCatalog() {
+      const token = ++state.catalogLoad;
+      if (catalogController) catalogController.abort();
+      catalogController = new AbortController();
+      const controller = catalogController;
+      const timer = setTimeout(() => controller.abort(),15000);
+      $("catalogStatus").textContent = "Loading full catalog…";
+      try {
+        const response = await fetch(CATALOG_URL,{signal:controller.signal,cache:"no-store"});
+        if (!response.ok) throw new Error("Catalog HTTP "+response.status+".");
+        const data = await response.json();
+        if (token !== state.catalogLoad || state.disposed) return;
+        acceptCatalog(data);
+      } catch (error) {
+        if (token !== state.catalogLoad || state.disposed) return;
+        $("catalogStatus").textContent =
+          (error.name === "AbortError" ? "Catalog request timed out." : error.message)+
+          (catalog ? " Previous catalog retained." : " Load a local full catalog or retry. Silent playback remains available.");
+      } finally {
+        clearTimeout(timer);
+        if (catalogController === controller) catalogController = null;
+      }
+    }
+    function make(tag,text) {
+      const el = document.createElement(tag);
+      if (text !== undefined) el.textContent = text;
+      return el;
+    }
+    function renderCues() {
+      $("cueList").replaceChildren();
+      for (const cue of cues) {
+        const box = make("div"); box.className = "cue";
+        const title = make("div",cue.label); title.className = "cue-title";
+        const row = make("div"); row.className = "row";
+        const timeLabel = make("label","Time (s) ");
+        const time = make("input"); time.type = "number";
+        time.min = "0"; time.max = "12.99"; time.step = ".01"; time.value = cue.time;
+        timeLabel.append(time);
+        const search = make("input"); search.type = "search"; search.placeholder = "Search this cue’s sound choices";
+        search.setAttribute("aria-label","Search sounds for "+cue.label);
+        const select = make("select"); select.setAttribute("aria-label","Sound for "+cue.label);
+        const gainLabel = make("label","Gain ");
+        const gain = make("input"); gain.type = "number";
+        gain.min = "0"; gain.max = "1"; gain.step = ".01"; gain.value = cue.gain;
+        gainLabel.append(gain);
+        const remove = make("button","Remove"); remove.type = "button";
+
+        function populate() {
+          select.replaceChildren();
+          const none = make("option","No sound"); none.value = ""; select.append(none);
+          const query = search.value.trim().toLowerCase();
+          const list = [...soundMap.values()].filter(s =>
+            s.id === cue.soundId || !query ||
+            (s.id+" "+(s.tags || []).join(" ")).toLowerCase().includes(query)
+          );
+          for (const sound of list) {
+            const option = make("option",sound.pack+" / "+sound.file+(sound.favorite ? " · favorite" : ""));
+            option.value = sound.id; select.append(option);
+          }
+          if (cue.soundId && !soundMap.has(cue.soundId)) {
+            const missing = make("option","Unavailable: "+cue.soundId);
+            missing.value = cue.soundId; select.append(missing);
+          }
+          select.value = cue.soundId;
+        }
+        time.addEventListener("change",() => {
+          cue.time = Math.max(0,Math.min(12.99,Number(time.value)||0));
+          time.value = cue.time; resetTransport("Cue timing changed. Click Play.");
+        });
+        gain.addEventListener("change",() => {
+          cue.gain = Math.max(0,Math.min(1,Number(gain.value)||0));
+          gain.value = cue.gain; resetTransport("Cue gain changed. Click Play.");
+        });
+        search.addEventListener("input",populate);
+        select.addEventListener("change",() => {
+          cue.soundId = select.value; resetTransport("Cue selection changed. Click Play.");
+        });
+        remove.addEventListener("click",() => {
+          cues = cues.filter(item => item.key !== cue.key);
+          resetTransport("Cue removed. Click Play."); renderCues();
+        });
+        populate(); row.append(timeLabel,search,select,gainLabel,remove);
+        box.append(title,row); $("cueList").append(box);
+      }
+    }
+    function downloadJSON(name,data) {
+      const url = URL.createObjectURL(new Blob([JSON.stringify(data,null,2)],{type:"application/json"}));
+      const link = make("a"); link.href = url; link.download = name;
+      document.body.append(link); link.click(); link.remove();
+      setTimeout(() => URL.revokeObjectURL(url),10000);
+    }
+
+    // AUDIO: individual sources, exact cue times, resume offsets, bounded preparation.
+    function getAudioContext() {
+      if (!audioContext) {
+        const AC = window.AudioContext || window.webkitAudioContext;
+        if (!AC) throw new Error("Web Audio unavailable.");
+        audioContext = new AC();
+        output = audioContext.createGain(); output.connect(audioContext.destination); setVolume();
+      }
+      return audioContext;
+    }
+    function setVolume() {
+      if (!output || audioContext.state === "closed") return;
+      output.gain.setTargetAtTime($("mute").checked ? 0 : Number($("volume").value),audioContext.currentTime,.025);
+    }
+    async function loadSound(sound,token) {
+      if (cache.has(sound.url)) return cache.get(sound.url);
+      const controller = new AbortController();
+      fetchControllers.add(controller);
+      const timer = setTimeout(() => controller.abort(),12000);
+      try {
+        const response = await fetch(sound.url,{signal:controller.signal});
+        if (!response.ok) throw new Error("Audio HTTP "+response.status);
+        const bytes = await response.arrayBuffer();
+        const buffer = await bounded(audioContext.decodeAudioData(bytes),12000,"Audio decoding");
+        if (token !== state.run || state.disposed) throw new Error("Cancelled.");
+        cache.set(sound.url,buffer);
+        return buffer;
+      } finally {
+        clearTimeout(timer); fetchControllers.delete(controller);
+      }
+    }
+    async function prepareEffects(project,offset,token) {
+      const ids = [...new Set(project.filter(c => c.soundId && c.gain > 0 && c.time < HOLD).map(c => c.soundId))];
+      const buffers = new Map(), failures = [];
+      // Four concurrent loads; a project is capped at 32 cues.
+      let index = 0;
+      await Promise.all(Array.from({length:Math.min(4,ids.length)},async () => {
+        while (index < ids.length && token === state.run && !state.disposed) {
+          const id = ids[index++], sound = soundMap.get(id);
+          if (!sound) { failures.push(id); continue; }
+          try {
+            // Decode earlier cues too, so a still-active tail can resume.
+            buffers.set(id,await loadSound(sound,token));
+          } catch (_) { if (token === state.run) failures.push(id); }
+        }
+      }));
+      return {buffers,failures};
+    }
+    function scheduleClip(buffer,cueTime,gainValue,epoch,offset,music=false) {
+      const end = Math.min(HOLD,cueTime+buffer.duration);
+      const begin = Math.max(offset,cueTime);
+      const length = end-begin;
+      if (length <= .001 || gainValue <= 0) return;
+      const at = epoch+begin-offset;
+      const source = audioContext.createBufferSource(), gain = audioContext.createGain();
+      source.buffer = buffer; source.connect(gain); gain.connect(output);
+      const item = {source,gain}; sources.add(item);
+      // Short ramp suppresses boundary clicks; longer fade only for truncated tails/music.
+      const truncated = end < cueTime+buffer.duration-.001;
+      const fadeIn = Math.min(music ? .035 : .004,length/4);
+      const fadeOut = Math.min(music ? .35 : truncated ? .06 : .004,length/4);
+      gain.gain.setValueAtTime(0,at);
+      gain.gain.linearRampToValueAtTime(gainValue,at+fadeIn);
+      gain.gain.setValueAtTime(gainValue,at+length-fadeOut);
+      gain.gain.linearRampToValueAtTime(0,at+length);
+      source.onended = () => {
+        source.disconnect(); gain.disconnect(); sources.delete(item);
+      };
+      try { source.start(at,begin-cueTime,length); }
+      catch (error) {
+        source.onended = null; source.disconnect(); gain.disconnect(); sources.delete(item);
+        throw error;
+      }
+    }
+
+    // OPTIONAL VIDEO: readiness is initial playable data, not full buffering.
+    function clearVideoWatcher() {
+      if (videoWatchCleanup) { videoWatchCleanup(); videoWatchCleanup = null; }
+    }
+    function watchVideo() {
+      clearVideoWatcher();
+      const generation = ++state.videoGeneration;
+      state.videoReady = false;
+      ui.video.textContent = "Loading video. Initial readiness requires readyState ≥ 2.";
+      let settled = false,timer;
+      const events = ["loadeddata","canplay","loadedmetadata","progress"];
+      function cleanup() {
+        clearTimeout(timer);
+        events.forEach(name => video.removeEventListener(name,check));
+        video.removeEventListener("error",bad);
+      }
+      function check() {
+        if (settled || generation !== state.videoGeneration || state.disposed || video.error || video.readyState < 2) return;
+        settled = true; cleanup(); videoWatchCleanup = null;
+        state.videoReady = true;
+        ui.video.textContent = "Video has initial playable data. Streaming may still buffer.";
+        updateControls();
+      }
+      function bad() {
+        if (settled || generation !== state.videoGeneration) return;
+        settled = true; cleanup(); videoWatchCleanup = null;
+        state.videoReady = false;
+        ui.video.textContent = "Media error "+(video.error?.code || "unknown")+". Retry, use local MP4, or continue without video.";
+        updateControls();
+      }
+      events.forEach(name => video.addEventListener(name,check));
+      video.addEventListener("error",bad);
+      timer = setTimeout(() => {
+        check();
+        if (!settled) {
+          ui.video.textContent = "Loading timed out, not a confirmed media error. Late readiness can recover; retry or continue without video.";
+          updateControls();
+        }
+      },20000);
+      videoWatchCleanup = cleanup;
+      check(); if (video.error && !settled) bad(); updateControls();
+    }
+    function prepareVideo(url) {
+      resetTransport();
+      state.videoEnabled = true; state.videoReady = false; resetVideoTracking(); clearVideoWatcher();
+      videoSourceURL = url; video.hidden = false;
+      video.muted = true; video.defaultMuted = true; video.loop = false;
+      video.src = url; video.load(); watchVideo(); updateControls();
+      message("Video selected. Once ready, click Play.");
+    }
+    function withoutVideo() {
+      resetTransport(); clearVideoWatcher(); state.videoGeneration++;
+      state.videoEnabled = false; state.videoReady = false;
+      video.hidden = true; video.removeAttribute("src"); video.load();
+      ui.video.textContent = "Video disabled. Motion and optional audio remain available.";
+      updateControls(); message(state.core ? "Ready without video." : "Preparing motion system…");
+    }
+    function videoTarget(t) {
+      const end = Number.isFinite(video.duration) ? Math.max(0,video.duration-.05) : HOLD;
+      return Math.min(t,HOLD,end);
+    }
+    async function seekVideo(t) {
+      const target = videoTarget(t);
+      if (Math.abs(video.currentTime-target) < .025 && !video.seeking) return;
+      await new Promise((resolve,reject) => {
+        let done = false;
+        const timer = setTimeout(() => finish(new Error("Video seek timed out.")),8000);
+        function finish(error) {
+          if (done) return; done = true; clearTimeout(timer);
+          video.removeEventListener("seeked",ok); video.removeEventListener("error",bad);
+          error ? reject(error) : resolve();
+        }
+        function ok() { finish(); }
+        function bad() { finish(new Error("Video failed during seeking.")); }
+        video.addEventListener("seeked",ok); video.addEventListener("error",bad);
+        try { video.currentTime = target; } catch (error) { finish(error); }
+      });
+    }
+    function syncVideo(t) {
+      if (!state.videoEnabled) return;
+      const target = videoTarget(t);
+      if (t >= HOLD || (Number.isFinite(video.duration) && t >= Math.max(0,video.duration-.05))) {
+        if (!state.videoHeld) {
+          state.videoHeld = true; video.pause(); video.playbackRate = 1;
+          try { video.currentTime = target; } catch (_) {}
+        }
+        return;
+      }
+      if (video.readyState < 2 || video.seeking || t-state.lastCorrection < .5) return;
+      state.lastCorrection = t;
+      const drift = video.currentTime-target;
+      if (Math.abs(drift) > .35) {
+        try { video.currentTime = target; } catch (_) {}
+      } else video.playbackRate = drift > .06 ? .97 : drift < -.06 ? 1.03 : 1;
+    }
+
+    async function startAt(offset=0,automatic=false) {
+      if (!state.core || state.disposed || state.decoding || state.starting ||
+          (state.videoEnabled && !state.videoReady)) return;
+      offset = Math.max(0,Math.min(DURATION,Number(offset)||0));
+      cancelAutoplay(); stopTransport();
+      const token = state.run;
+      state.starting = true; state.phase = "starting"; state.time = offset;
+      resetVideoTracking(); renderAt(offset); updateControls(); message("Preparing playback…");
+      const project = cues.map(c => ({...c}));
+      const wantsAudio = $("enableAudio").checked && (!automatic || state.audioActivated);
+      const wantsEffects = wantsAudio && $("enableSFX").checked;
+      let effects = {buffers:new Map(),failures:[]}, audioReady = false, activationError = "";
+      let phase = "audio";
+      try {
+        if (wantsAudio) {
+          try {
+            const ctx = getAudioContext();
+            // resume() is invoked before awaiting, inside a Play/Resume gesture.
+            await bounded(ctx.resume(),8000,"Audio activation");
+            if (token !== state.run || state.disposed) return;
+            if (ctx.state !== "running") throw new Error("Audio clock is suspended.");
+            audioReady = true; state.audioActivated = true;
+            if (wantsEffects) {
+              ui.audio.textContent = "Preparing only the project’s selected effects…";
+              effects = await prepareEffects(project,offset,token);
+              if (token !== state.run || state.disposed) return;
+            }
+          } catch (error) {
+            if (token !== state.run || state.disposed) return;
+            activationError = error.message; audioReady = false;
+          }
+        }
+        state.clock = audioReady ? "audio" : "visual";
+        if (state.videoEnabled) {
+          phase = "video";
+          await seekVideo(offset);
+          if (token !== state.run || state.disposed) return;
+          const beforeEnd = !Number.isFinite(video.duration) || offset < Math.max(0,video.duration-.05);
+          if (offset < HOLD && beforeEnd) {
+            await bounded(Promise.resolve(video.play()),10000,"Video playback");
+            if (token !== state.run || state.disposed) {
+              if (state.phase !== "playing" && !state.starting) video.pause();
+              return;
+            }
+          } else state.videoHeld = true;
+        }
+        phase = "audio";
+        state.base = offset;
+        state.epoch = audioReady ? audioContext.currentTime+.08 : performance.now()/1000;
+        if (audioReady) {
+          try {
+            if (musicBuffer) scheduleClip(musicBuffer,0,.7,state.epoch,offset,true);
+            if (wantsEffects) for (const cue of project) {
+              const buffer = effects.buffers.get(cue.soundId);
+              if (buffer) scheduleClip(buffer,cue.time,cue.gain,state.epoch,offset);
+            }
+          } catch (error) {
+            stopAudio(); state.clock = "visual"; state.epoch = performance.now()/1000;
+            audioReady = false; activationError = "Audio scheduling failed: "+error.message;
+          }
+        }
+        ui.audio.textContent = activationError
+          ? activationError+" Continuing silently. Retry Play or disable audio."
+          : audioReady
+            ? "Audio enabled · "+effects.buffers.size+" effect files prepared"+
+              (effects.failures.length ? " · "+effects.failures.length+" unavailable files skipped." : ".")+
+              " Final hold is silent."
+            : "Playing silently. Enable audio and click Play for sound.";
+        state.phase = "playing"; state.starting = false;
+        message(audioReady ? "Playing on the shared audio clock." : "Playing on the silent visual clock.");
+        updateControls(); tick(token);
+      } catch (error) {
+        if (token !== state.run || state.disposed) return;
+        stopTransport(); state.phase = "ready";
+        if (phase === "video") ui.video.textContent = error.message+" Retry, use local MP4, or continue without video.";
+        message(error.message); updateControls();
+      }
+    }
+    function tick(token) {
+      if (token !== state.run || state.phase !== "playing" || state.disposed) return;
+      if (state.clock === "audio" && audioContext.state !== "running") {
+        pauseRun("Audio clock suspended. Click Resume."); return;
+      }
+      state.time = clockTime(); renderAt(state.time); syncVideo(state.time);
+      if (state.time >= DURATION) { finishRun(); return; }
+      state.raf = requestAnimationFrame(() => tick(token));
+    }
+    function finishRun() {
+      state.time = DURATION; renderAt(DURATION); stopTransport(); state.phase = "ended";
+      message("Finished — headlines and final pose held. Play restarts all components.");
+      updateControls();
+      if (ui.mode.value === "preview" && ui.loop.checked) startAt(0,true);
+    }
+    function pauseRun(text="Paused. Resume continues from this composition time.") {
+      if (state.phase !== "playing") return;
+      state.time = clockTime(); stopTransport(); state.phase = "paused";
+      renderAt(state.time); message(text); updateControls();
+    }
+
+    ui.play.addEventListener("click",() => startAt(0,false));
+    ui.pause.addEventListener("click",() => pauseRun());
+    ui.resume.addEventListener("click",() => startAt(state.time,false));
+    ui.mode.addEventListener("change",() => resetTransport(
+      ui.mode.value === "record" ? "One-pass mode ready. Click Play; final frame remains." : "Preview ready. Click Play."
+    ));
+    $("enableAudio").addEventListener("change",() => resetTransport("Audio setting changed. Click Play."));
+    $("enableSFX").addEventListener("change",() => resetTransport("Effect setting changed. Click Play."));
+    $("mute").addEventListener("change",setVolume);
+    $("volume").addEventListener("input",setVolume);
+    $("reloadCatalog").addEventListener("click",loadCatalog);
+    $("catalogFile").addEventListener("change",async event => {
+      const file = event.target.files?.[0]; if (!file) return;
+      const token = ++state.catalogLoad;
+      if (catalogController) catalogController.abort();
+      try {
+        const data = JSON.parse(await file.text());
+        if (token === state.catalogLoad && !state.disposed) acceptCatalog(data);
+      } catch (error) {
+        if (token === state.catalogLoad && !state.disposed) $("catalogStatus").textContent = error.message;
+      }
+    });
+    $("addCue").addEventListener("click",() => {
+      if (cues.length >= 32) { message("This starter limits each project to 32 cues."); return; }
+      cues.push({key:++cueSerial,label:"Custom cue "+cueSerial,time:8,soundId:"",gain:.2});
+      resetTransport("Cue added. Choose a sound and timing."); renderCues();
+    });
+    $("exportCues").addEventListener("click",() => downloadJSON("ferman-project-cues.json",{
+      schemaVersion:"1.0.0",duration:DURATION,holdStart:HOLD,
+      catalogRevision:catalog?.revision || null,
+      catalogBaseUrl:catalog?.baseUrl || null,
+      status:"provisional-project-mix",
+      cues:cues.map(({key,...cue}) => cue)
+    }));
+
+    $("retry3d").addEventListener("click",initialize3D);
+    $("useFallback").addEventListener("click",() => {
+      state.threeLoad++; fail3D("Stylized fallback selected."); renderAt(state.time);
+    });
+    $("withoutVideo").addEventListener("click",withoutVideo);
+    $("retryVideo").addEventListener("click",() => { if (videoSourceURL) prepareVideo(videoSourceURL); });
+    $("loadRemote").addEventListener("click",() => {
+      try {
+        const url = new URL($("videoURL").value.trim());
+        if (!["https:","http:"].includes(url.protocol)) throw new Error("Use an HTTP(S) video URL.");
+        prepareVideo(url.href);
+        if (localVideoURL) { URL.revokeObjectURL(localVideoURL); localVideoURL = null; }
+      } catch (error) { ui.video.textContent = "Invalid URL: "+error.message; }
+    });
+    $("videoFile").addEventListener("change",event => {
+      const file = event.target.files?.[0]; if (!file) return;
+      if (!/\.mp4$/i.test(file.name) && file.type !== "video/mp4") { ui.video.textContent = "Choose an MP4."; return; }
+      const old = localVideoURL; localVideoURL = URL.createObjectURL(file);
+      prepareVideo(localVideoURL); if (old) URL.revokeObjectURL(old);
+    });
+    video.addEventListener("waiting",() => {
+      if (state.phase !== "playing" || !state.videoEnabled || state.videoHeld) return;
+      state.buffering = true;
+      if (ui.mode.value === "record") pauseRun("One-pass playback paused because video buffered. Resume when ready or use local MP4.");
+      else ui.video.textContent = "Video buffering. Motion/audio continue; video catches up best-effort.";
+    });
+    video.addEventListener("stalled",() => {
+      if (state.videoEnabled) ui.video.textContent = "Video download stalled. Buffered data may still play; retry or use local MP4.";
+    });
+    video.addEventListener("playing",() => {
+      if (state.buffering) { state.buffering = false; ui.video.textContent = "Video resumed. Synchronization remains best-effort."; }
+    });
+    video.addEventListener("error",() => {
+      if (!state.videoEnabled) return;
+      state.videoReady = false;
+      if (state.phase === "playing") pauseRun("Video failed. Retry, replace it, or continue without video.");
+      ui.video.textContent = "Video media error. Use recovery controls."; updateControls();
+    });
+    $("audioFile").addEventListener("change",async event => {
+      const file = event.target.files?.[0]; if (!file) return;
+      resetTransport();
+      const token = ++state.audioLoad;
+      state.decoding = true; musicBuffer = null; updateControls();
+      $("musicStatus").textContent = "Decoding "+file.name+" locally…";
+      try {
+        if (!/\.mp3$/i.test(file.name) && file.type !== "audio/mpeg") throw new Error("Choose an MP3.");
+        const ctx = getAudioContext();
+        const decoded = await bounded(file.arrayBuffer().then(bytes => ctx.decodeAudioData(bytes)),30000,"MP3 decoding");
+        if (token !== state.audioLoad || state.disposed) return;
+        musicBuffer = decoded;
+        $("musicStatus").textContent = file.name+" · "+decoded.duration.toFixed(1)+
+          " seconds. Up to 13 seconds used with ending fade. Enable audio and click Play.";
+      } catch (error) {
+        if (token === state.audioLoad && !state.disposed) $("musicStatus").textContent = error.message+" Visual playback remains available.";
+      } finally {
+        if (token === state.audioLoad && !state.disposed) {
+          state.decoding = false; message(state.core ? "Ready. Click Play." : "Preparing motion system…"); updateControls();
+        }
+      }
+    });
+    $("removeAudio").addEventListener("click",() => {
+      resetTransport(); state.audioLoad++; state.decoding = false; musicBuffer = null;
+      $("audioFile").value = ""; $("musicStatus").textContent = "Local MP3 removed. Project effects remain available.";
+      updateControls(); message("Ready. Click Play.");
+    });
+
+    document.addEventListener("visibilitychange",() => {
+      if (!document.hidden) return;
+      cancelAutoplay();
+      if (state.phase === "playing") pauseRun("Paused while tab is hidden. Resume when visible.");
+      else if (state.starting) {
+        stopTransport(); state.phase = "paused"; message("Start cancelled while tab was hidden."); updateControls();
+      }
+    });
+    function dispose() {
+      if (state.disposed) return;
+      state.disposed = true; state.audioLoad++; state.threeLoad++; state.catalogLoad++; state.videoGeneration++;
+      cancelAutoplay(); stopTransport(); clearVideoWatcher();
+      if (catalogController) catalogController.abort();
+      if (timeline) timeline.kill();
+      if (lottieAnimation) lottieAnimation.destroy();
+      dispose3D(); video.removeAttribute("src"); video.load();
+      if (localVideoURL) URL.revokeObjectURL(localVideoURL);
+      localVideoURL = null; cache.clear(); musicBuffer = null;
+      if (output) output.disconnect();
+      if (audioContext) audioContext.close().catch(() => {});
+    }
+    window.addEventListener("pagehide",event => {
+      if (event.persisted) {
+        cancelAutoplay();
+        if (state.phase === "playing") pauseRun("Page restored. Click Resume.");
+        else if (state.starting) { stopTransport(); state.phase = "paused"; }
+      } else dispose();
+    });
+    window.addEventListener("pageshow",event => {
+      if (event.persisted && !state.disposed) {
+        if (state.videoEnabled) watchVideo(); updateControls();
+      }
+    });
+    window.FermanMotion = {
+      duration:DURATION,
+      seek(t) {
+        if (!state.core || state.disposed) return;
+        cancelAutoplay(); stopTransport();
+        state.time = Math.max(0,Math.min(DURATION,Number(t)||0));
+        state.phase = "paused"; renderAt(state.time); updateControls();
+        message("Composition pose set. Resume synchronizes selected media.");
+      },
+      getProjectCues:() => cues.map(c => ({...c})),
+      dispose
+    };
+    async function initialize() {
+      renderCues();
+      // Catalog and optional 3D never block silent motion readiness.
+      loadCatalog(); initialize3D(); initializeLottie();
+      try {
+        await Promise.all([
+          loadClassic("https://cdn.jsdelivr.net/npm/gsap@3.12.5/dist/gsap.min.js","gsap"),
+          fontsReady()
+        ]);
+        if (state.disposed) return;
+        buildTimeline(); state.core = true; state.phase = "ready";
+        renderAt(0); updateControls();
+        if (state.decoding || musicBuffer || state.videoEnabled || $("enableAudio").checked || ui.mode.value !== "preview") {
+          message("Motion ready. Prepare selected assets, then click Play."); return;
+        }
+        message("Ready. Silent preview starts in one second.");
+        state.autoTimer = setTimeout(() => {
+          if (!state.disposed && !document.hidden && !musicBuffer && !state.videoEnabled &&
+              !state.decoding && !$("enableAudio").checked && state.phase === "ready" &&
+              ui.mode.value === "preview") startAt(0,true);
+        },1000);
+      } catch (error) {
+        if (state.disposed) return;
+        state.phase = "error"; message("Required motion library failed: "+error.message+" Check connectivity and reload.");
+        updateControls();
+      }
+    }
+    initialize();
+  })();
+  </script>
+</body>
+</html>
